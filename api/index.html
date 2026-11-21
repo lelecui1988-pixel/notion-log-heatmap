@@ -1,0 +1,180 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>我的日志热力图</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 20px;
+    background: #ffffff;
+    color: #24292f;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  .container {
+    max-width: 1000px;
+    margin: auto;
+  }
+  h2 {
+    font-size: 20px;
+    margin: 0 0 8px;
+  }
+  .subtitle {
+    color: #656d76;
+    font-size: 13px;
+    margin-bottom: 22px;
+  }
+  .summary {
+    font-size: 14px;
+    margin-bottom: 18px;
+  }
+  .heatmap-wrap {
+    overflow-x: auto;
+    padding-bottom: 12px;
+  }
+  .heatmap {
+    display: grid;
+    grid-template-rows: repeat(7, 13px);
+    grid-auto-flow: column;
+    grid-auto-columns: 13px;
+    gap: 3px;
+    width: max-content;
+  }
+  .cell {
+    width: 13px;
+    height: 13px;
+    border-radius: 2px;
+    background: #ebedf0;
+  }
+  .level1 { background: #9be9a8; }
+  .level2 { background: #40c463; }
+  .level3 { background: #216e39; }
+  .labels {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 12px;
+    color: #656d76;
+    font-size: 12px;
+  }
+  .legend {
+    display: flex;
+    gap: 3px;
+  }
+  .legend span {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    display: inline-block;
+  }
+  #status {
+    color: #656d76;
+    font-size: 13px;
+    margin-top: 18px;
+  }
+  @media (max-width: 600px) {
+    body { padding: 12px; }
+    .heatmap { grid-template-rows: repeat(7, 11px); grid-auto-columns: 11px; gap: 2px; }
+    .cell { width: 11px; height: 11px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>年度日志记录</h2>
+  <div class="subtitle">过去365天 · 按发生时间统计</div>
+  <div class="summary" id="summary">正在读取日志数据……</div>
+  <div class="heatmap-wrap">
+    <div class="heatmap" id="heatmap"></div>
+  </div>
+  <div class="labels">
+    <span>少</span>
+    <div class="legend">
+      <span style="background:#ebedf0"></span>
+      <span style="background:#9be9a8"></span>
+      <span style="background:#40c463"></span>
+      <span style="background:#216e39"></span>
+    </div>
+    <span>多</span>
+  </div>
+  <div id="status">数据加载中……</div>
+</div>
+
+<script>
+function dateKey(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function createHeatmap(counts) {
+  const heatmap = document.getElementById("heatmap");
+  heatmap.innerHTML = "";
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const start = new Date(today);
+  start.setDate(start.getDate() - 364);
+
+  let total = 0;
+  let activeDays = 0;
+
+  for (const count of Object.values(counts)) {
+    total += count;
+  }
+
+  for (let i = 0; i < 365; i++) {
+    const date = new Date(start);
+    date.setDate(start.getDate() + i);
+
+    const key = dateKey(date);
+    const count = counts[key] || 0;
+
+    if (count > 0) activeDays++;
+
+    const cell = document.createElement("div");
+    cell.className = "cell";
+
+    if (count >= 4) cell.classList.add("level3");
+    else if (count >= 2) cell.classList.add("level2");
+    else if (count === 1) cell.classList.add("level1");
+
+    cell.title = `${key}：${count} 条记录`;
+    heatmap.appendChild(cell);
+  }
+
+  document.getElementById("summary").textContent =
+    `过去365天共记录 ${total} 条日志，活跃记录 ${activeDays} 天`;
+
+  document.getElementById("status").textContent =
+    `统计截止日期：${dateKey(today)}`;
+}
+
+async function loadHeatmap() {
+  try {
+    const response = await fetch("/api/heatmap");
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "读取数据失败");
+    }
+
+    createHeatmap(data.counts || {});
+  } catch (error) {
+    document.getElementById("summary").textContent =
+      "热力图加载失败";
+    document.getElementById("status").textContent =
+      error.message;
+  }
+}
+
+loadHeatmap();
+</script>
+</body>
+</html>
