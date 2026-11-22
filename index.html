@@ -36,17 +36,84 @@ h2 {
   margin-bottom: 20px;
 }
 
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 20px 0 10px;
+}
+
 .summary {
   font-size: 14px;
   margin-bottom: 16px;
 }
 
+/* 近期数据卡片 */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stat-card {
+  background: #f6f8fa;
+  border: 1px solid #eaeef2;
+  border-radius: 8px;
+  padding: 12px;
+  min-width: 0;
+}
+
+.stat-name {
+  font-size: 13px;
+  color: #656d76;
+  margin-bottom: 7px;
+}
+
+.stat-main {
+  font-size: 25px;
+  font-weight: 650;
+  color: #216e39;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-sub {
+  font-size: 12px;
+  color: #656d76;
+  margin-top: 7px;
+  line-height: 1.5;
+}
+
+.streak-card {
+  margin-top: 10px;
+  background: #f6f8fa;
+  border: 1px solid #eaeef2;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.streak-label {
+  font-size: 13px;
+  color: #656d76;
+}
+
+.streak-number {
+  font-size: 24px;
+  font-weight: 650;
+  color: #216e39;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 工具栏 */
 .toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 12px;
+  margin: 20px 0 12px;
 }
 
 .refresh-btn {
@@ -54,15 +121,12 @@ h2 {
   background: #ffffff;
   color: #24292f;
   border-radius: 6px;
-  padding: 6px 12px;
+  padding: 7px 12px;
   font-size: 12px;
   cursor: pointer;
 }
 
-.refresh-btn:active {
-  background: #f3f4f6;
-}
-
+/* 热力图 */
 .heatmap-wrap {
   overflow-x: auto;
   padding: 4px 0 12px;
@@ -135,6 +199,7 @@ h2 {
   background: #216e39;
 }
 
+/* 方格详情 */
 .detail {
   margin-top: 10px;
   padding: 10px 12px;
@@ -144,6 +209,7 @@ h2 {
   min-height: 38px;
 }
 
+/* 图例 */
 .labels {
   display: flex;
   gap: 8px;
@@ -172,9 +238,26 @@ h2 {
   margin-top: 14px;
 }
 
+/* 平板和手机 */
 @media (max-width: 600px) {
   body {
     padding: 12px;
+  }
+
+  .stats-grid {
+    gap: 6px;
+  }
+
+  .stat-card {
+    padding: 9px 7px;
+  }
+
+  .stat-main {
+    font-size: 21px;
+  }
+
+  .stat-sub {
+    font-size: 11px;
   }
 
   .heatmap-layout {
@@ -218,6 +301,45 @@ h2 {
     正在读取日志数据……
   </div>
 
+  <div class="section-title">近期记录情况</div>
+
+  <div class="stats-grid">
+
+    <div class="stat-card">
+      <div class="stat-name">近3天</div>
+      <div class="stat-main" id="active3">-/-</div>
+      <div class="stat-sub" id="info3">读取中</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-name">近7天</div>
+      <div class="stat-main" id="active7">-/-</div>
+      <div class="stat-sub" id="info7">读取中</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-name">近15天</div>
+      <div class="stat-main" id="active15">-/-</div>
+      <div class="stat-sub" id="info15">读取中</div>
+    </div>
+
+  </div>
+
+  <div class="streak-card">
+    <div>
+      <div style="font-weight:600;font-size:14px">
+        当前连续记录
+      </div>
+      <div class="streak-label">
+        从今天或昨天向前计算
+      </div>
+    </div>
+
+    <div class="streak-number" id="streak">
+      - 天
+    </div>
+  </div>
+
   <div class="toolbar">
     <span style="font-size:12px;color:#656d76">
       每5分钟自动更新
@@ -227,6 +349,8 @@ h2 {
       ↻ 立即刷新
     </button>
   </div>
+
+  <div class="section-title">年度记录热力图</div>
 
   <div class="heatmap-wrap">
     <div class="heatmap-layout">
@@ -274,17 +398,83 @@ function dateKey(date) {
   return `${y}-${m}-${d}`;
 }
 
+function getLocalDate(offset = 0) {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() - offset);
+  return date;
+}
+
+// 计算近N天的数据
+function calculatePeriod(counts, days) {
+  let total = 0;
+  let activeDays = 0;
+
+  for (let i = 0; i < days; i++) {
+    const date = getLocalDate(i);
+    const key = dateKey(date);
+    const count = counts[key] || 0;
+
+    total += count;
+
+    if (count > 0) {
+      activeDays++;
+    }
+  }
+
+  return {
+    total,
+    activeDays,
+    rate: Math.round(activeDays / days * 100)
+  };
+}
+
+// 更新近期数据卡片
+function updateStatistics(counts) {
+  [3, 7, 15].forEach(days => {
+    const result = calculatePeriod(counts, days);
+
+    document.getElementById(`active${days}`).textContent =
+      `${result.activeDays}/${days}`;
+
+    document.getElementById(`info${days}`).textContent =
+      `${result.total}条记录 · ${result.rate}%活跃率`;
+  });
+
+  // 连续记录：今天没有记录时，允许从昨天开始计算
+  let startOffset = 0;
+
+  if ((counts[dateKey(getLocalDate(0))] || 0) === 0) {
+    startOffset = 1;
+  }
+
+  let streak = 0;
+
+  for (let i = startOffset; i < 365; i++) {
+    const key = dateKey(getLocalDate(i));
+
+    if ((counts[key] || 0) > 0) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+
+  document.getElementById("streak").textContent =
+    `${streak} 天`;
+}
+
+// 创建365天热力图
 function createHeatmap(counts) {
   const heatmap = document.getElementById("heatmap");
   heatmap.innerHTML = "";
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
+  const today = getLocalDate(0);
   const start = new Date(today);
+
   start.setDate(start.getDate() - 364);
 
-  // 计算第一天是星期几，补齐前面的空格
+  // 对齐星期
   const offset = start.getDay();
 
   for (let i = 0; i < offset; i++) {
@@ -303,7 +493,6 @@ function createHeatmap(counts) {
     const key = dateKey(date);
     const count = counts[key] || 0;
 
-    // 只统计当前365天内的数据
     total += count;
 
     if (count > 0) {
@@ -328,12 +517,10 @@ function createHeatmap(counts) {
       `${key}，${count}条记录`
     );
 
-    // 电脑鼠标悬停
     cell.addEventListener("mouseenter", () => {
       showDetail(key, count);
     });
 
-    // 平板、手机点击
     cell.addEventListener("click", () => {
       showDetail(key, count);
     });
@@ -343,11 +530,9 @@ function createHeatmap(counts) {
 
   document.getElementById("summary").textContent =
     `过去365天共记录 ${total} 条日志，活跃记录 ${activeDays} 天`;
-
-  document.getElementById("status").textContent =
-    `统计截止日期：${dateKey(today)}`;
 }
 
+// 点击或悬停显示详情
 function showDetail(date, count) {
   document.getElementById("detail").textContent =
     `${date}：${count} 条记录`;
@@ -375,12 +560,13 @@ async function loadHeatmap() {
       throw new Error(data.error || "读取数据失败");
     }
 
-    createHeatmap(data.counts || {});
+    const counts = data.counts || {};
 
-    const now = new Date();
+    createHeatmap(counts);
+    updateStatistics(counts);
 
     document.getElementById("status").textContent =
-      `最后更新：${now.toLocaleString("zh-CN")}`;
+      `最后更新：${new Date().toLocaleString("zh-CN")}`;
 
   } catch (error) {
     document.getElementById("status").textContent =
@@ -392,7 +578,7 @@ async function loadHeatmap() {
   }
 }
 
-// 页面打开时读取
+// 页面打开时读取数据
 loadHeatmap();
 
 // 手动刷新
@@ -403,7 +589,7 @@ document.getElementById("refreshBtn").addEventListener(
 
 // 每5分钟自动刷新
 setInterval(loadHeatmap, 5 * 60 * 1000);
-
 </script>
+
 </body>
 </html>
