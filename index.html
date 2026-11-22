@@ -145,8 +145,14 @@ function createHeatmap(counts) {
     else if (count >= 2) cell.classList.add("level2");
     else if (count === 1) cell.classList.add("level1");
 
-    cell.title = `${key}：${count} 条记录`;
-    heatmap.appendChild(cell);
+   cell.title = `${key}：${count} 条记录`;
+
+cell.addEventListener("click", () => {
+  document.getElementById("status").textContent =
+    `${key}：${count} 条记录`;
+});
+
+heatmap.appendChild(cell);
   }
 
   document.getElementById("summary").textContent =
