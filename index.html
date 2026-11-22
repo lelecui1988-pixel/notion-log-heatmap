@@ -5,92 +5,251 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>我的日志热力图</title>
+
 <style>
-  * { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 20px;
+  background: #ffffff;
+  color: #24292f;
+  font-family: -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+}
+
+.container {
+  max-width: 1000px;
+  margin: auto;
+}
+
+h2 {
+  font-size: 20px;
+  margin: 0 0 8px;
+}
+
+.subtitle {
+  color: #656d76;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+.summary {
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.refresh-btn {
+  border: 1px solid #d1d9e0;
+  background: #ffffff;
+  color: #24292f;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.refresh-btn:active {
+  background: #f3f4f6;
+}
+
+.heatmap-wrap {
+  overflow-x: auto;
+  padding: 4px 0 12px;
+}
+
+.heatmap-layout {
+  display: grid;
+  grid-template-columns: 24px max-content;
+  gap: 6px;
+  width: max-content;
+}
+
+.weekday-labels {
+  display: grid;
+  grid-template-rows: repeat(7, 13px);
+  gap: 3px;
+  color: #656d76;
+  font-size: 10px;
+  text-align: center;
+}
+
+.weekday-labels span {
+  line-height: 13px;
+}
+
+.heatmap {
+  display: grid;
+  grid-template-rows: repeat(7, 13px);
+  grid-auto-flow: column;
+  grid-auto-columns: 13px;
+  gap: 3px;
+  width: max-content;
+}
+
+.cell {
+  width: 13px;
+  height: 13px;
+  border-radius: 2px;
+  background: #ebedf0;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.cell:hover {
+  outline: 1px solid #57606a;
+  outline-offset: 1px;
+}
+
+.cell:focus-visible {
+  outline: 2px solid #0969da;
+  outline-offset: 1px;
+}
+
+.empty-cell {
+  width: 13px;
+  height: 13px;
+  visibility: hidden;
+}
+
+.level1 {
+  background: #9be9a8;
+}
+
+.level2 {
+  background: #40c463;
+}
+
+.level3 {
+  background: #216e39;
+}
+
+.detail {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: #f6f8fa;
+  border-radius: 6px;
+  font-size: 13px;
+  min-height: 38px;
+}
+
+.labels {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 12px;
+  color: #656d76;
+  font-size: 12px;
+}
+
+.legend {
+  display: flex;
+  gap: 3px;
+}
+
+.legend span {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+#status {
+  color: #656d76;
+  font-size: 12px;
+  margin-top: 14px;
+}
+
+@media (max-width: 600px) {
   body {
-    margin: 0;
-    padding: 20px;
-    background: #ffffff;
-    color: #24292f;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding: 12px;
   }
-  .container {
-    max-width: 1000px;
-    margin: auto;
+
+  .heatmap-layout {
+    grid-template-columns: 20px max-content;
+    gap: 4px;
   }
-  h2 {
-    font-size: 20px;
-    margin: 0 0 8px;
+
+  .heatmap,
+  .weekday-labels {
+    grid-template-rows: repeat(7, 11px);
+    gap: 2px;
   }
-  .subtitle {
-    color: #656d76;
-    font-size: 13px;
-    margin-bottom: 22px;
-  }
-  .summary {
-    font-size: 14px;
-    margin-bottom: 18px;
-  }
-  .heatmap-wrap {
-    overflow-x: auto;
-    padding-bottom: 12px;
-  }
+
   .heatmap {
-    display: grid;
-    grid-template-rows: repeat(7, 13px);
-    grid-auto-flow: column;
-    grid-auto-columns: 13px;
-    gap: 3px;
-    width: max-content;
+    grid-auto-columns: 11px;
   }
-  .cell {
-    width: 13px;
-    height: 13px;
-    border-radius: 2px;
-    background: #ebedf0;
+
+  .cell,
+  .empty-cell {
+    width: 11px;
+    height: 11px;
   }
-  .level1 { background: #9be9a8; }
-  .level2 { background: #40c463; }
-  .level3 { background: #216e39; }
-  .labels {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    justify-content: flex-end;
-    margin-top: 12px;
-    color: #656d76;
-    font-size: 12px;
+
+  .weekday-labels span {
+    line-height: 11px;
   }
-  .legend {
-    display: flex;
-    gap: 3px;
-  }
-  .legend span {
-    width: 12px;
-    height: 12px;
-    border-radius: 2px;
-    display: inline-block;
-  }
-  #status {
-    color: #656d76;
-    font-size: 13px;
-    margin-top: 18px;
-  }
-  @media (max-width: 600px) {
-    body { padding: 12px; }
-    .heatmap { grid-template-rows: repeat(7, 11px); grid-auto-columns: 11px; gap: 2px; }
-    .cell { width: 11px; height: 11px; }
-  }
+}
 </style>
 </head>
+
 <body>
 <div class="container">
+
   <h2>年度日志记录</h2>
-  <div class="subtitle">过去365天 · 按发生时间统计</div>
-  <div class="summary" id="summary">正在读取日志数据……</div>
-  <div class="heatmap-wrap">
-    <div class="heatmap" id="heatmap"></div>
+
+  <div class="subtitle">
+    过去365天 · 按发生时间统计
   </div>
+
+  <div class="summary" id="summary">
+    正在读取日志数据……
+  </div>
+
+  <div class="toolbar">
+    <span style="font-size:12px;color:#656d76">
+      每5分钟自动更新
+    </span>
+
+    <button class="refresh-btn" id="refreshBtn">
+      ↻ 立即刷新
+    </button>
+  </div>
+
+  <div class="heatmap-wrap">
+    <div class="heatmap-layout">
+
+      <div class="weekday-labels">
+        <span>日</span>
+        <span>一</span>
+        <span>二</span>
+        <span>三</span>
+        <span>四</span>
+        <span>五</span>
+        <span>六</span>
+      </div>
+
+      <div class="heatmap" id="heatmap"></div>
+
+    </div>
+  </div>
+
+  <div class="detail" id="detail">
+    点击任意方格查看当天记录数量
+  </div>
+
   <div class="labels">
     <span>少</span>
     <div class="legend">
@@ -101,7 +260,9 @@
     </div>
     <span>多</span>
   </div>
+
   <div id="status">数据加载中……</div>
+
 </div>
 
 <script>
@@ -109,6 +270,7 @@ function dateKey(date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
+
   return `${y}-${m}-${d}`;
 }
 
@@ -122,12 +284,17 @@ function createHeatmap(counts) {
   const start = new Date(today);
   start.setDate(start.getDate() - 364);
 
+  // 计算第一天是星期几，补齐前面的空格
+  const offset = start.getDay();
+
+  for (let i = 0; i < offset; i++) {
+    const empty = document.createElement("div");
+    empty.className = "empty-cell";
+    heatmap.appendChild(empty);
+  }
+
   let total = 0;
   let activeDays = 0;
-
-  for (const count of Object.values(counts)) {
-    total += count;
-  }
 
   for (let i = 0; i < 365; i++) {
     const date = new Date(start);
@@ -136,23 +303,42 @@ function createHeatmap(counts) {
     const key = dateKey(date);
     const count = counts[key] || 0;
 
-    if (count > 0) activeDays++;
+    // 只统计当前365天内的数据
+    total += count;
 
-    const cell = document.createElement("div");
+    if (count > 0) {
+      activeDays++;
+    }
+
+    const cell = document.createElement("button");
+    cell.type = "button";
     cell.className = "cell";
 
-    if (count >= 4) cell.classList.add("level3");
-    else if (count >= 2) cell.classList.add("level2");
-    else if (count === 1) cell.classList.add("level1");
+    if (count >= 4) {
+      cell.classList.add("level3");
+    } else if (count >= 2) {
+      cell.classList.add("level2");
+    } else if (count === 1) {
+      cell.classList.add("level1");
+    }
 
-   cell.title = `${key}：${count} 条记录`;
+    cell.title = `${key}：${count} 条记录`;
+    cell.setAttribute(
+      "aria-label",
+      `${key}，${count}条记录`
+    );
 
-cell.addEventListener("click", () => {
-  document.getElementById("status").textContent =
-    `${key}：${count} 条记录`;
-});
+    // 电脑鼠标悬停
+    cell.addEventListener("mouseenter", () => {
+      showDetail(key, count);
+    });
 
-heatmap.appendChild(cell);
+    // 平板、手机点击
+    cell.addEventListener("click", () => {
+      showDetail(key, count);
+    });
+
+    heatmap.appendChild(cell);
   }
 
   document.getElementById("summary").textContent =
@@ -162,9 +348,27 @@ heatmap.appendChild(cell);
     `统计截止日期：${dateKey(today)}`;
 }
 
+function showDetail(date, count) {
+  document.getElementById("detail").textContent =
+    `${date}：${count} 条记录`;
+}
+
+let isLoading = false;
+
 async function loadHeatmap() {
+  if (isLoading) return;
+
+  isLoading = true;
+
+  const button = document.getElementById("refreshBtn");
+  button.textContent = "正在刷新…";
+
   try {
-    const response = await fetch("/api/heatmap");
+    const response = await fetch(
+      "/api/heatmap?t=" + Date.now(),
+      { cache: "no-store" }
+    );
+
     const data = await response.json();
 
     if (!response.ok) {
@@ -172,15 +376,34 @@ async function loadHeatmap() {
     }
 
     createHeatmap(data.counts || {});
-  } catch (error) {
-    document.getElementById("summary").textContent =
-      "热力图加载失败";
+
+    const now = new Date();
+
     document.getElementById("status").textContent =
-      error.message;
+      `最后更新：${now.toLocaleString("zh-CN")}`;
+
+  } catch (error) {
+    document.getElementById("status").textContent =
+      "更新失败：" + error.message;
+
+  } finally {
+    isLoading = false;
+    button.textContent = "↻ 立即刷新";
   }
 }
 
+// 页面打开时读取
 loadHeatmap();
+
+// 手动刷新
+document.getElementById("refreshBtn").addEventListener(
+  "click",
+  loadHeatmap
+);
+
+// 每5分钟自动刷新
+setInterval(loadHeatmap, 5 * 60 * 1000);
+
 </script>
 </body>
 </html>
